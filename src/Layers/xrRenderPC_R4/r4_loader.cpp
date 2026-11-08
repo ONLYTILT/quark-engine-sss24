@@ -36,6 +36,10 @@ void CRender::level_Load(IReader* fs)
 	Models->BeginLevelPrefetch(g_pGameLevel ? g_pGameLevel->name().c_str() : "unknown_level");
 	IReader* chunk;
 
+	// The engine water shader is first compiled at device creation, before any level exists.
+	// SSS 24 ssfx_water.s picks the per-level flowmap through getLevel(), so compile it again now.
+	Target->s_ssfx_water.create("ssfx_water");
+
 	// Shaders
 	//	g_pGamePersistent->LoadTitle		("st_loading_shaders");
 	g_pGamePersistent->LoadTitle();

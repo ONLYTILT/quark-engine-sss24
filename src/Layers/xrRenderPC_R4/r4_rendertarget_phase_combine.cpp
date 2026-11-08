@@ -391,10 +391,26 @@ void CRenderTarget::phase_combine()
 		phase_ssfx_water_waves();
 	}
 
-	if (!RImplementation.o.dx10_msaa)
-		u_setrt(rt_Generic_0, 0, 0, HW.pBaseZB);
-	else
-		u_setrt(rt_Generic_0_r, 0, 0, rt_MSAADepth->pZRT);
+	// SSS water takes its refraction (everything seen through the surface) from s_rimage = $user$generic_temp.
+	// Refresh it with this frame's scene first: otherwise it still holds an older frame that already contains
+	// water, and the refraction lags one frame behind and feeds back into itself (jittering, doubled waves).
+	if (RImplementation.o.ssfx_water && RImplementation.mapWater.size() > 0)
+	{
+		if (!RImplementation.o.dx10_msaa)
+			HW.pContext->CopyResource(rt_Generic_temp->pSurface, rt_Generic_0->pSurface);
+		else
+			HW.pContext->CopyResource(rt_Generic_temp->pSurface, rt_Generic_0_r->pSurface);
+	}
+
+	// SSS 24 water writes its motion vectors and material id (water, no TAA history) to target 2.
+	// Without it TAA reprojects water with the motion of the ground below and reflections jitter.
+	{
+		const ref_rt waterMotionRT = need_motion_vectors() ? rt_ssfx_motion_vectors : ref_rt();
+		if (!RImplementation.o.dx10_msaa)
+			u_setrt(rt_Generic_0, 0, waterMotionRT, HW.pBaseZB);
+		else
+			u_setrt(rt_Generic_0_r, 0, waterMotionRT, rt_MSAADepth->pZRT);
+	}
 
 	// Final water rendering ( All the code above can be omitted if the Water module isn't installed )
 	RCache.set_xform_world(Fidentity);

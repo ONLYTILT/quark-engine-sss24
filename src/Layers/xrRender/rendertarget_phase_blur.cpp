@@ -513,7 +513,7 @@ void CRenderTarget::phase_ssfx_water_waves()
 
 	const bool sss24 = ssfx_sss24_water_shaders();
 
-	set_viewport_size(HW.pContext, 512, 512);
+	set_viewport_size(HW.pContext, rt_ssfx_water_waves->dwWidth, rt_ssfx_water_waves->dwHeight);
 
 	u_setrt(sss24 ? rt_ssfx_water_waves_tmp : rt_ssfx_water_waves, 0, 0, NULL);
 	RCache.set_CullMode(CULL_NONE);
@@ -545,10 +545,20 @@ void CRenderTarget::phase_ssfx_water_waves()
 		RCache.Render(D3DPT_TRIANGLELIST, Offset, 0, 4, 0, 2);
 
 		// Rain ripples
+		set_viewport_size(HW.pContext, rt_ssfx_rain_ripples->dwWidth, rt_ssfx_rain_ripples->dwHeight);
 		u_setrt(rt_ssfx_rain_ripples, 0, 0, NULL);
 		RCache.set_Element(s_ssfx_water_blur->E[4]);
 		RCache.set_Geometry(g_combine);
 		RCache.Render(D3DPT_TRIANGLELIST, Offset, 0, 4, 0, 2);
+	}
+
+	// The water samples the waves far away: fill their mips like the SSS 24 modded exe does.
+	if (rt_ssfx_water_waves->m_use_mips)
+	{
+		// Unbind the waves render target first; keep RCache's cached targets in sync with the device.
+		u_setrt(Device.dwWidth, Device.dwHeight, HW.pBaseRT, NULL, NULL, NULL);
+		HW.pContext->OMSetRenderTargets(1, &HW.pBaseRT, nullptr);
+		HW.pContext->GenerateMips(rt_ssfx_water_waves->pTexture->get_SRView());
 	}
 
 	set_viewport_size(HW.pContext, w, h);

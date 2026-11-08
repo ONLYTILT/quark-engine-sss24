@@ -18,6 +18,7 @@ CRT::CRT()
 	fmt = D3DFMT_UNKNOWN;
 	m_sample_count = 1;
 	m_use_uav = false;
+	m_use_mips = false;
 }
 
 CRT::~CRT()
@@ -28,7 +29,7 @@ CRT::~CRT()
 	DEV->_DeleteRT(this);
 }
 
-void CRT::create(LPCSTR Name, u32 w, u32 h, D3DFORMAT f, u32 SampleCount, bool useUAV)
+void CRT::create(LPCSTR Name, u32 w, u32 h, D3DFORMAT f, u32 SampleCount, bool useUAV, bool useMips)
 {
 	if (pSurface) return;
 
@@ -42,6 +43,7 @@ void CRT::create(LPCSTR Name, u32 w, u32 h, D3DFORMAT f, u32 SampleCount, bool u
 	fmt = f;
 	m_sample_count = SampleCount;
 	m_use_uav = useUAV;
+	m_use_mips = useMips;
 
 	// Get caps
 	//D3DCAPS9	caps;
@@ -110,7 +112,8 @@ void CRT::create(LPCSTR Name, u32 w, u32 h, D3DFORMAT f, u32 SampleCount, bool u
 	ZeroMemory(&desc, sizeof(desc));
 	desc.Width = dwWidth;
 	desc.Height = dwHeight;
-	desc.MipLevels = 1;
+	const bool mips = useMips && !bUseAsDepth && SampleCount <= 1;
+	desc.MipLevels = mips ? 0 : 1; // 0 = full chain
 	desc.ArraySize = 1;
 	desc.Format = dx10FMT;
 	desc.SampleDesc.Count = SampleCount;
@@ -128,6 +131,9 @@ void CRT::create(LPCSTR Name, u32 w, u32 h, D3DFORMAT f, u32 SampleCount, bool u
 
 	if (HW.FeatureLevel >= D3D_FEATURE_LEVEL_11_0 && !bUseAsDepth && SampleCount == 1 && useUAV)
 		desc.BindFlags |= D3D11_BIND_UNORDERED_ACCESS;
+
+	if (mips)
+		desc.MiscFlags |= D3D11_RESOURCE_MISC_GENERATE_MIPS;
 
 	CHK_DX(HW.pDevice->CreateTexture2D( &desc, NULL, &pSurface ));
 	HW.stats_manager.increment_stats_rtarget(pSurface);
@@ -206,12 +212,12 @@ void CRT::reset_begin()
 
 void CRT::reset_end()
 {
-	create(*cName, dwWidth, dwHeight, fmt, m_sample_count, m_use_uav);
+	create(*cName, dwWidth, dwHeight, fmt, m_sample_count, m_use_uav, m_use_mips);
 }
 
-void resptrcode_crt::create(LPCSTR Name, u32 w, u32 h, D3DFORMAT f, u32 SampleCount, bool useUAV)
+void resptrcode_crt::create(LPCSTR Name, u32 w, u32 h, D3DFORMAT f, u32 SampleCount, bool useUAV, bool useMips)
 {
-	_set(DEV->_CreateRT(Name, w, h, f, SampleCount, useUAV));
+	_set(DEV->_CreateRT(Name, w, h, f, SampleCount, useUAV, useMips));
 }
 
 //////////////////////////////////////////////////////////////////////////

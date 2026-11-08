@@ -8,7 +8,7 @@ class CRT : public xr_resource_named
 public:
 	CRT();
 	~CRT();
-	void	create(LPCSTR Name, u32 w, u32 h, D3DFORMAT f, u32 SampleCount = 1, bool useUAV = false );
+	void	create(LPCSTR Name, u32 w, u32 h, D3DFORMAT f, u32 SampleCount = 1, bool useUAV = false, bool useMips = false );
 	void destroy();
 	void reset_begin();
 	void reset_end();
@@ -28,13 +28,14 @@ public:
 	D3DFORMAT fmt;
 	u32 m_sample_count;
 	bool m_use_uav;
+	bool m_use_mips; // full mip chain, filled with GenerateMips after rendering
 
 	u64 _order;
 };
 
 struct resptrcode_crt : public resptr_base<CRT>
 {
-	void				create			(LPCSTR Name, u32 w, u32 h, D3DFORMAT f, u32 SampleCount = 1, bool useUAV = false );
+	void				create			(LPCSTR Name, u32 w, u32 h, D3DFORMAT f, u32 SampleCount = 1, bool useUAV = false, bool useMips = false );
 	void destroy() { _set(NULL); }
 };
 

@@ -692,9 +692,12 @@ CRenderTarget::CRenderTarget()
 		rt_ssfx_volumetric.create(r2_RT_ssfx_volumetric, w / 8.0f, h / 8.0f, D3DFMT_A16B16G16R16F); // Volumetric
 		rt_ssfx_volumetric_tmp.create(r2_RT_ssfx_volumetric_tmp, w / 8.0f, h / 8.0f, D3DFMT_A16B16G16R16F); // Volumetric
 		rt_ssfx_rain.create(r2_RT_ssfx_rain, w / 8.0f, h / 8.0f, D3DFMT_A8R8G8B8); // Rain refraction buffer
-		rt_ssfx_water_waves.create(r2_RT_ssfx_water_waves, 512, 512, D3DFMT_A8R8G8B8); // Water Waves
-		rt_ssfx_water_waves_tmp.create(r2_RT_ssfx_water_waves_tmp, 512, 512, D3DFMT_A8R8G8B8); // SSS 24: Water wave heights
-		rt_ssfx_rain_ripples.create(r2_RT_ssfx_rain_ripples, 512, 512, D3DFMT_A8R8G8B8); // SSS 24: Rain ripples
+		// Sizes and formats as in the SSS 24 modded exe. The waves are tiled over the whole water surface,
+		// so they need mips (GenerateMips after the pass): without them the distant waves shimmer and
+		// the reflections jitter while the waves animate.
+		rt_ssfx_water_waves.create(r2_RT_ssfx_water_waves, 256, 256, D3DFMT_A8R8G8B8, 1, false, true); // Water Waves
+		rt_ssfx_water_waves_tmp.create(r2_RT_ssfx_water_waves_tmp, 256, 256, D3DFMT_A8R8G8B8); // SSS 24: Water wave heights
+		rt_ssfx_rain_ripples.create(r2_RT_ssfx_rain_ripples, 512, 512, D3DFMT_A16B16G16R16F); // SSS 24: Rain ripples
 
 		rt_ssfx_prevPos.create(r2_RT_ssfx_prevPos, w, h, D3DFMT_A16B16G16R16F, SampleCount);
 

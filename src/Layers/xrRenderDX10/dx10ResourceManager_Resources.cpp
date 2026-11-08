@@ -499,7 +499,7 @@ void CResourceManager::_DeleteConstantTable(const R_constant_table* C)
 }
 
 //--------------------------------------------------------------------------------------------------------------
-CRT* CResourceManager::_CreateRT(LPCSTR Name, u32 w, u32 h, D3DFORMAT f, u32 SampleCount, bool useUAV)
+CRT* CResourceManager::_CreateRT(LPCSTR Name, u32 w, u32 h, D3DFORMAT f, u32 SampleCount, bool useUAV, bool useMips)
 {
 	R_ASSERT(Name && Name[0] && w && h);
 
@@ -518,7 +518,8 @@ CRT* CResourceManager::_CreateRT(LPCSTR Name, u32 w, u32 h, D3DFORMAT f, u32 Sam
 		RT->fmt = f;
 		RT->m_sample_count = SampleCount;
 		RT->m_use_uav = useUAV;
-		if (Device.b_is_Ready) RT->create(Name, w, h, f, SampleCount, useUAV);
+		RT->m_use_mips = useMips;
+		if (Device.b_is_Ready) RT->create(Name, w, h, f, SampleCount, useUAV, useMips);
 		return RT;
 	}
 }
